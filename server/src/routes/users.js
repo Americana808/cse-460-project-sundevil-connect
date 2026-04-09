@@ -2,12 +2,10 @@ const express = require('express');
 const router = express.Router();
 const eventController = require('../controllers/eventController');
 
-//get all members
-router.get('/', eventController.getAllMembers);
+// get user profile
+router.get('/:id', eventController.getUserProfile);
 
-//get member by id
-router.get('/:id', eventController.getMemberById);
-
-
+// update user profile
+router.put('/:id', eventController.updateUserProfile);
 
 module.exports = router;
