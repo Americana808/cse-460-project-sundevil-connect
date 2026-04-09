@@ -6,12 +6,10 @@ const routes = require('./routes');
 
 require('./models/index');
 
-
-
-app.use('/api', routes);
-
 app.use(cors());
 app.use(express.json());
+
+app.use('/api', routes);
 
 app.get('/hello', (req, res) => {
     res.json({ message: 'Hello worlds' });
