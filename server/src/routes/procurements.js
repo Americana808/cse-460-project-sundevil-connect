@@ -1,17 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const eventController = require('../controllers/eventController');
+const eventController = require('../controllers/procurementController');
 
 // get all procurements
-router.get('/', eventController.getAllProcurements);
+router.get('/', procurementController.getAllProcurements);
 
 // club leadership create procurement request
-router.post('/', eventController.createProcurement);
+router.post('/', procurementController.createProcurement);
 
 // advisor approve procurement request
-router.post('/:id/approve', eventController.approveProcurement);
+router.post('/:id/approve', procurementController.approveProcurement);
 
 // advisor reject procurement request
-router.post('/:id/reject', eventController.rejectProcurement);
+router.post('/:id/reject', procurementController.rejectProcurement);
 
 module.exports = router;

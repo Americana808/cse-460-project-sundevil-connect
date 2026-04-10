@@ -1,10 +1,9 @@
-const Database = require('better-sqlite3');
-const path = require('path');
+const Database = require('better-sqlite3')
+const path = require('path')
 
-const db = new Database(path.join(__dirname, '../../database.db'));
+const db = new Database(path.join(__dirname, '../../database.db'))
 
-//faster queries
-db.pragma('journal_mode = WAL');
+db.pragma('journal_mode = WAL')
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
@@ -22,7 +21,10 @@ db.exec(`
     description TEXT,
     category TEXT,
     mission TEXT,
-    status TEXT DEFAULT 'pending'
+    status TEXT DEFAULT 'pending',
+    advisor_id INTEGER,
+    logo TEXT,
+    FOREIGN KEY (advisor_id) REFERENCES users(id)
   );
 
   CREATE TABLE IF NOT EXISTS club_memberships (
@@ -30,6 +32,7 @@ db.exec(`
     club_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
     status TEXT DEFAULT 'pending',
+    role TEXT DEFAULT 'member',
     FOREIGN KEY (club_id) REFERENCES clubs(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
   );
@@ -42,6 +45,8 @@ db.exec(`
     location TEXT,
     date TEXT,
     time TEXT,
+    category TEXT,
+    price REAL DEFAULT 0,
     FOREIGN KEY (club_id) REFERENCES clubs(id)
   );
 
@@ -78,6 +83,8 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS flag_reports (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
+    content_type TEXT NOT NULL,
+    content_id INTEGER NOT NULL,
     reason TEXT,
     status TEXT DEFAULT 'pending',
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
