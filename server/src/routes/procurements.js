@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const eventController = require('../controllers/procurementController');
+const procurementController = require('../controllers/procurementController');
 
 // get all procurements
 router.get('/', procurementController.getAllProcurements);
