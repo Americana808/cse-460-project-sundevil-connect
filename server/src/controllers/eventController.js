@@ -2,7 +2,12 @@ const db = require('../models/index');
 
 const getAllEvents = (req, res) => {
     try {
-        const events = db.prepare('SELECT * FROM events').all();
+        const events = db.prepare(`
+            SELECT e.*, COUNT(er.id) as attendee_count
+            FROM events e
+            LEFT JOIN event_registrations er ON er.event_id = e.id
+            GROUP BY e.id
+        `).all();
         res.json(events);
     } catch (error) {
         res.status(500).json({ message: 'Internal server error' });
