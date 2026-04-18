@@ -1,5 +1,22 @@
 const db = require('../models/index');
 
+const requireClubLeaderOrAdmin = (clubId, user, res) => {
+    if (user?.role === 'admin') return true;
+
+    const leader = db
+        .prepare(
+            "SELECT 1 FROM club_memberships WHERE club_id = ? AND user_id = ? AND role = 'leader' AND status = 'approved'"
+        )
+        .get(clubId, user?.id);
+
+    if (!leader) {
+        res.status(403).json({ message: 'Leaders only' });
+        return false;
+    }
+
+    return true;
+};
+
 const getAllClubs = (req, res) => {
     try {
         const clubs = db.prepare('SELECT * FROM clubs').all();
@@ -78,10 +95,16 @@ const approveMembership = (req, res) => {
 
         if (memberId) {
             // club leadership approving a member
-            const membership = db.prepare('SELECT * FROM club_memberships WHERE id = ? AND club_id = ?').get(memberId, id);
+            if (!requireClubLeaderOrAdmin(id, req.user, res)) return;
+
+            // NOTE: client passes user id here (from getClubMembers)
+            const membership = db
+                .prepare('SELECT * FROM club_memberships WHERE user_id = ? AND club_id = ?')
+                .get(memberId, id);
             if (!membership) return res.status(404).json({ message: 'Membership not found' });
 
-            db.prepare("UPDATE club_memberships SET status = 'approved' WHERE id = ?").run(memberId);
+            db.prepare("UPDATE club_memberships SET status = 'approved' WHERE club_id = ? AND user_id = ?")
+                .run(id, memberId);
             return res.json({ message: 'Member approved' });
         }
 
@@ -103,10 +126,15 @@ const rejectMembership = (req, res) => {
         const { id, memberId } = req.params;
 
         if (memberId) {
-            const membership = db.prepare('SELECT * FROM club_memberships WHERE id = ? AND club_id = ?').get(memberId, id);
+            if (!requireClubLeaderOrAdmin(id, req.user, res)) return;
+
+            const membership = db
+                .prepare('SELECT * FROM club_memberships WHERE user_id = ? AND club_id = ?')
+                .get(memberId, id);
             if (!membership) return res.status(404).json({ message: 'Membership not found' });
 
-            db.prepare("UPDATE club_memberships SET status = 'rejected' WHERE id = ?").run(memberId);
+            db.prepare("UPDATE club_memberships SET status = 'rejected' WHERE club_id = ? AND user_id = ?")
+                .run(id, memberId);
             return res.json({ message: 'Member rejected' });
         }
 
@@ -157,10 +185,15 @@ const getClubMembers = (req, res) => {
 const removeMember = (req, res) => {
     try {
         const { id, memberId } = req.params;
-        const membership = db.prepare('SELECT * FROM club_memberships WHERE id = ? AND club_id = ?').get(memberId, id);
+
+        if (!requireClubLeaderOrAdmin(id, req.user, res)) return;
+
+        const membership = db
+            .prepare('SELECT * FROM club_memberships WHERE user_id = ? AND club_id = ?')
+            .get(memberId, id);
         if (!membership) return res.status(404).json({ message: 'Membership not found' });
 
-        db.prepare('DELETE FROM club_memberships WHERE id = ?').run(memberId);
+        db.prepare('DELETE FROM club_memberships WHERE club_id = ? AND user_id = ?').run(id, memberId);
         res.json({ message: 'Member removed' });
     } catch (error) {
         res.status(500).json({ message: 'Internal server error' });
